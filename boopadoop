@@ -1,0 +1,116 @@
+import pygame
+import random
+import os
+
+pygame.init()
+
+WIDTH = 360
+HEIGHT = 480
+FPS = 30
+GROUND = HEIGHT - 60
+SLOW = 3
+FAST = 8
+
+PLAYER_ACC = 0.9
+PLAYER_FRICTION = -0.12
+PLAYER_GRAV = 0.9
+vec = pygame.math.Vector2
+
+WHITE = (255,255,255)
+BLACK = (0,0,0)
+RED = (255,0,0)
+GREEN = (0,255,0)
+BLUE = (0,0,255)
+
+game_folder = os.path.dirname(__file__)
+img_folder = os.path.join(game_folder, "img")
+
+class Player(pygame.sprite.Sprite):
+	def __init__(self):
+		pygame.sprite.Sprite.__init__(self)
+		self.image = pygame.image.load(os.path.join(img_folder, "boatman.png")).convert()
+		self.image.set_colorkey(BLACK)
+		self.rect = self.image.get_rect()
+
+		self.pos = vec(10, GROUND - 60)
+		self.vel = vec(0, 0)
+		self.acc = vec(0, 0)
+
+
+
+
+	def update(self):
+		keystate = pygame.key.get_pressed()
+
+		if keystate[pygame.K_RIGHT]:
+			self.acc.x += PLAYER_ACC
+		if keystate[pygame.K_LEFT]:
+			self.acc.x += -PLAYER_ACC
+		if keystate[pygame.K_UP]:
+			self.rect.y += -5
+		if keystate[pygame.K_DOWN]:
+			self.rect.y += 5
+		if self.vel.y == 0 and keystate[pygame.K_SPACE]:
+			self.vel.y = -20
+
+		self.acc.x += self.vel.x * PLAYER_FRICTION
+		self.vel += self.acc
+		self.pos += self.vel + 0.5 * self.acc
+
+		if self.pos.x > WIDTH:
+			self.pos.x = 0
+		if self.pos.x < 0:
+			self.pos.x = WIDTH
+
+		if self.pos.y > GROUND:
+			self.pos.y = GROUND + 1
+			self.vel.y = 0
+
+		self.rect.midbottom = self.pos
+class Platform(pygame.sprite.Sprite):
+		def __init__(self):
+				pygame.sprite.Sprite.__init__(self)
+				self.image = pygame.Surface((100, 25))
+				self.image.fill(BLACK)
+				self.rect = self.image.get_rect()
+				self.rect.x = 10
+				self.rect.y = HEIGHT - 160
+
+		def update(self):
+				self.rect.x += -5
+				if self.rect.right < 0:
+						self.rect.left = WIDTH
+pygame.init()
+pygame.mixer.init()
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("poggersman")
+
+clock = pygame.time.Clock()
+
+all_sprites = pygame.sprite.Group()
+player = Player()
+all_sprites.add(player)
+platform = Platform()
+all_sprites.add(platform)
+
+running = True
+while running:
+
+	clock.tick(FPS)
+
+	#process events
+	for event in pygame.event.get():
+		if event.type == pygame. QUIT:
+			running = False
+
+	#update
+	all_sprites.update()
+
+	#DRAW
+	screen.fill(RED)
+	all_sprites.draw(screen)
+
+	#flip
+	pygame.display.flip()
+
+pygame.quit()
